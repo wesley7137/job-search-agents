@@ -11,12 +11,11 @@ from crewai_tools import (
     FileWriterTool,
     FileReadTool
 )
-from langchain.tools import Tool, tool
+from crewai import Agent, Task
+from langchain.tools import Tool
 from langchain.utilities import SerpAPIWrapper
 import csv
 import io
-
-from crewai import Agent, Task
 from unstructured.partition.html import partition_html
 
 class JobSearchTools:
@@ -36,7 +35,7 @@ class JobSearchTools:
     file_writer = FileWriterTool()
     file_reader = FileReadTool()
 
-    @tool("Calculate")
+    @staticmethod
     def calculate(operation: str):
         """Perform a calculation. Input should be a mathematical expression as a string."""
         try:
@@ -44,7 +43,7 @@ class JobSearchTools:
         except:
             return "Error: Invalid mathematical expression"
 
-    @tool("NLP Analysis")
+    @staticmethod
     def nlp_analysis(text: str):
         """Perform NLP analysis on the given text."""
         word_count = len(text.split())
@@ -57,7 +56,7 @@ class JobSearchTools:
         Average Word Length: {avg_word_length:.2f}
         """
 
-    @tool("Ranking Algorithm")
+    @staticmethod
     def ranking_algorithm(job_listings: str, candidate_profile: str):
         """Rank job listings based on candidate profile."""
         job_listings = json.loads(job_listings)
@@ -94,13 +93,13 @@ class JobSearchTools:
         reader = csv.DictReader(csv_io)
         return list(reader)
 
-    @tool("Search Google Jobs")
+    @staticmethod
     def search_google_jobs(query):
         """Search Google Jobs for job listings based on the given query"""
         url = "https://google.serper.dev/jobs"
         payload = json.dumps({"q": query, "num": 20})  # Increase number of results
         headers = {
-            'X-API-KEY': os.environ['SERPER_API_KEY'],
+            'X-API-KEY': os.environ['SERPAPI_API_KEY'],
             'Content-Type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload)
@@ -119,7 +118,7 @@ class JobSearchTools:
         
         return json.dumps(job_listings)
 
-    @tool("Search LinkedIn Jobs")
+    @staticmethod
     def search_linkedin_jobs(query):
         """Search LinkedIn for job listings based on the given query"""
         # Placeholder implementation for LinkedIn Jobs search
@@ -148,14 +147,14 @@ class JobSearchTools:
         
         return json.dumps(job_listings)
 
-    @tool("Search the internet")
+    @staticmethod
     def search_internet(query):
         """Useful to search the internet about a given topic and return relevant results"""
         top_result_to_return = 4
         url = "https://google.serper.dev/search"
         payload = json.dumps({"q": query})
         headers = {
-            'X-API-KEY': os.environ['SERPER_API_KEY'],
+            'X-API-KEY': os.environ['SERPAPI_API_KEY'],
             'content-type': 'application/json'
         }
         response = requests.request("POST", url, headers=headers, data=payload)
@@ -171,7 +170,7 @@ class JobSearchTools:
                 next
         return '\n'.join(string)
 
-    @tool("Scrape website content")
+    @staticmethod
     def scrape_and_summarize_website(website):
         """Useful to scrape and summarize a website content"""
         url = f"https://chrome.browserless.io/content?token={os.environ['BROWSERLESS_API_KEY']}"
@@ -196,3 +195,64 @@ class JobSearchTools:
             summary = task.execute()
             summaries.append(summary)
         return "\n\n".join(summaries)
+
+    # Convert static methods to Tool objects
+    calculate_tool = Tool(
+        name="Calculate",
+        func=calculate.__func__,
+        description="Perform a calculation. Input should be a mathematical expression as a string."
+    )
+
+    nlp_analysis_tool = Tool(
+        name="NLP Analysis",
+        func=nlp_analysis.__func__,
+        description="Perform NLP analysis on the given text."
+    )
+
+    ranking_algorithm_tool = Tool(
+        name="Ranking Algorithm",
+        func=ranking_algorithm.__func__,
+        description="Rank job listings based on candidate profile."
+    )
+
+    resume_analyzer_tool = Tool(
+        name="Resume Analyzer",
+        func=resume_analyzer.__func__,
+        description="Analyze a resume and provide insights."
+    )
+
+    create_csv_tool = Tool(
+        name="Create CSV",
+        func=create_csv.__func__,
+        description="Create a CSV string from provided data and fieldnames."
+    )
+
+    read_csv_tool = Tool(
+        name="Read CSV",
+        func=read_csv.__func__,
+        description="Read a CSV string and return a list of dictionaries."
+    )
+
+    search_google_jobs_tool = Tool(
+        name="Search Google Jobs",
+        func=search_google_jobs.__func__,
+        description="Search Google Jobs for job listings based on the given query."
+    )
+
+    search_linkedin_jobs_tool = Tool(
+        name="Search LinkedIn Jobs",
+        func=search_linkedin_jobs.__func__,
+        description="Search LinkedIn for job listings based on the given query."
+    )
+
+    search_internet_tool = Tool(
+        name="Search Internet",
+        func=search_internet.__func__,
+        description="Search the internet for general information on a given topic."
+    )
+
+    scrape_and_summarize_website_tool = Tool(
+        name="Scrape and Summarize Website",
+        func=scrape_and_summarize_website.__func__,
+        description="Scrape and summarize the content of a given website."
+    )
