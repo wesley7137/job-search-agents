@@ -3,8 +3,13 @@ from textwrap import dedent
 from job_search_agents import JobSearchAgents
 from job_search_tasks import JobSearchTasks
 from dotenv import load_dotenv
+import os
+from langchain_openai import ChatOpenAI
 load_dotenv()
+os.environ["BROWSERLESS_API_KEY"] = os.getenv("BROWSERLESS_API_KEY")
+os.environ["SERPAPI_API_KEY"] = os.getenv("SERPAPI_API_KEY")
 
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 class JobSearchCrew:
     def __init__(self, job_title, location, candidate_skills, candidate_experience, resume_file_path):
         self.job_title = job_title
@@ -50,11 +55,12 @@ class JobSearchCrew:
             ],
             verbose=True,
             process="hierarchical",
-            manager_llm="gpt-4"
-        )
+            manager_llm=ChatOpenAI(model="gpt-4o-mini")
+            )
 
         result = crew.kickoff()
         return result
+
 
 if __name__ == "__main__":
     print("## Welcome to Job Search Crew")
