@@ -1,6 +1,3 @@
-from crewai import Task
-from textwrap import dedent
-
 class JobSearchTasks:
     def scrape_job_listings(self, agent, job_title, location):
         return Task(
