@@ -1,6 +1,8 @@
 from crewai import Agent
 from job_search_tools import JobSearchTools
 
+from job_search_tools import JobSearchTools
+
 class JobSearchAgents:
     def job_search_manager(self):
         return Agent(
@@ -27,12 +29,13 @@ class JobSearchAgents:
             ethical approach to data collection.""",
             verbose=True,
             tools=[
-                JobSearchTools.search_internet,
+                JobSearchTools.search_internet_tool,
                 JobSearchTools.website_search,
                 JobSearchTools.scrape_website,
                 JobSearchTools.vision_tool,
-                JobSearchTools.search_google_jobs,
-                JobSearchTools.search_linkedin_jobs
+                JobSearchTools.search_google_jobs_tool,
+                JobSearchTools.search_linkedin_jobs_tool,
+                JobSearchTools.scrape_and_summarize_website_tool
             ]
         )
 
@@ -48,9 +51,9 @@ class JobSearchAgents:
             tools=[
                 JobSearchTools.file_reader,
                 JobSearchTools.file_writer,
-                JobSearchTools.create_csv,
-                JobSearchTools.read_csv,
-                JobSearchTools.nlp_analysis
+                JobSearchTools.nlp_analysis_tool,
+                JobSearchTools.create_csv_tool,
+                JobSearchTools.read_csv_tool
             ]
         )
 
@@ -67,7 +70,7 @@ class JobSearchAgents:
                 JobSearchTools.csv_search,
                 JobSearchTools.json_search,
                 JobSearchTools.file_reader,
-                JobSearchTools.nlp_analysis
+                JobSearchTools.nlp_analysis_tool
             ]
         )
 
@@ -80,8 +83,8 @@ class JobSearchAgents:
             understanding of both quantitative and qualitative factors that contribute to job satisfaction and career success.""",
             verbose=True,
             tools=[
-                JobSearchTools.calculate,
-                JobSearchTools.ranking_algorithm
+                JobSearchTools.calculate_tool,
+                JobSearchTools.ranking_algorithm_tool
             ]
         )
 
@@ -96,6 +99,6 @@ class JobSearchAgents:
             tools=[
                 JobSearchTools.file_writer,
                 JobSearchTools.file_reader,
-                JobSearchTools.resume_analyzer
+                JobSearchTools.resume_analyzer_tool
             ]
         )
