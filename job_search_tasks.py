@@ -1,3 +1,6 @@
+from textwrap import dedent
+import csv
+
 class JobSearchTasks:
     def scrape_job_listings(self, agent, job_title, location):
         return Task(
@@ -5,11 +8,19 @@ class JobSearchTasks:
                 Conduct a comprehensive search and scraping operation to gather job listings for the position of {job_title} 
                 in {location}. Your task includes:
                 1. Identifying and prioritizing the most relevant job boards, company websites, and professional networks.
-                2. Scraping job listings, ensuring to capture all relevant details including job titles, companies, locations, 
-                   and full job descriptions.
+                2. Scraping job listings, ensuring to capture all relevant details including:
+                   - Job Title
+                   - Company/Employer
+                   - Industry (if available)
+                   - Location
+                   - Salary (if available)
+                   - Job Description
+                   - Date Posted
+                   - Application Link
                 3. Handling any anti-scraping measures ethically and efficiently.
                 4. Collecting as much raw data as possible for further processing.
                 5. Ensuring the data is up-to-date and from reliable sources.
+                6. Saving the raw scraped data in a temporary storage for subsequent tasks.
 
                 Your final answer MUST be a detailed report including:
                 - The number of job listings found
@@ -23,43 +34,45 @@ class JobSearchTasks:
             agent=agent
         )
 
-    def extract_and_structure_job_data(self, agent):
+    def extract_and_structure_job_data(self, agent, raw_data_path, output_csv_path):
         return Task(
             description=dedent(f"""
                 Extract and structure relevant job information from the scraped data. Your task includes:
-                1. Reading the raw scraped data from the previous task.
+                1. Reading the raw scraped data from the file located at {raw_data_path}.
                 2. Extracting the following information for each job listing:
                    - Job Title
                    - Location
                    - Salary (if available)
-                   - Company
-                   - Industry
+                   - Company/Employer
+                   - Industry (if available)
                    - Job Description
-                   - Posted Date
+                   - Date Posted
                    - Application Link
-                3. Cleaning and standardizing the extracted data (e.g., consistent date formats, salary ranges).
+                3. Cleaning and standardizing the extracted data (e.g., consistent date formats, salary ranges, and industry classifications).
                 4. Handling missing information appropriately (e.g., marking as "Not Available" or using placeholders).
                 5. Identifying and removing any duplicate listings.
                 6. Structuring the extracted data into a CSV format.
 
-                Your final answer MUST be a structured CSV document with the following columns:
+                Additionally, you are to generate a CSV file at {output_csv_path} with the following columns:
                 "Job Title", "Location", "Salary", "Company", "Industry", "Job Description", "Posted Date", "Link"
 
-                Additionally, provide a brief report including:
-                - The number of job listings successfully processed
-                - Any challenges encountered during the extraction process
-                - Statistics on data completeness (e.g., percentage of listings with salary information)
-                - Any interesting patterns or insights noticed during the extraction process
+                Your final answer MUST be:
+                - The generated CSV file ready for analysis or reporting.
+                - A brief report including:
+                    - The number of job listings successfully processed
+                    - Any challenges encountered during the extraction process
+                    - Statistics on data completeness (e.g., percentage of listings with salary information)
+                    - Any interesting patterns or insights noticed during the extraction process
 
                 {self.__tip_section()}
             """),
             agent=agent
         )
 
-    def analyze_job_descriptions(self, agent, candidate_skills, candidate_experience):
+    def analyze_job_descriptions(self, agent, candidate_skills, candidate_experience, structured_data_path):
         return Task(
             description=dedent(f"""
-                Analyze the job descriptions obtained from the structured data and match them against the candidate's 
+                Analyze the job descriptions obtained from the structured data at {structured_data_path} and match them against the candidate's 
                 profile. Your task includes:
                 1. Applying advanced NLP techniques to extract key requirements, responsibilities, and preferences from 
                    each job description.
@@ -82,11 +95,11 @@ class JobSearchTasks:
             agent=agent
         )
 
-    def rank_opportunities(self, agent):
+    def rank_opportunities(self, agent, structured_data_path, ranking_criteria):
         return Task(
             description=dedent(f"""
                 Develop and apply a sophisticated ranking algorithm to prioritize job opportunities based on the candidate's 
-                profile and the analyzed job descriptions. Your task includes:
+                profile and the analyzed job descriptions at {structured_data_path}. Your task includes:
                 1. Creating a multi-factor ranking algorithm considering elements such as skill match, experience level, 
                    company reputation, growth potential, and any stated preferences.
                 2. Applying this algorithm to the list of job opportunities.
@@ -106,13 +119,13 @@ class JobSearchTasks:
             agent=agent
         )
 
-    def optimize_resume(self, agent, resume_file_path):
+    def optimize_resume(self, agent, resume_file_path, top_job_listings):
         return Task(
             description=dedent(f"""
                 Optimize and tailor the candidate's resume for the top-ranked job opportunities. Your task includes:
                 1. Analyzing the resume located at {resume_file_path}.
                 2. Identifying key strengths and unique selling points in the candidate's profile.
-                3. Tailoring the resume for each of the top 3 ranked job opportunities.
+                3. Tailoring the resume for each of the top 3 ranked job opportunities from {top_job_listings}.
                 4. Ensuring the resume is ATS-friendly while also appealing to human recruiters.
                 5. Incorporating relevant keywords and phrases from the job descriptions.
                 6. Quantifying achievements and impacts where possible.
