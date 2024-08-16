@@ -2,7 +2,6 @@ import json
 import os
 import requests
 from crewai_tools import (
-    SerperDevTool,
     WebsiteSearchTool,
     ScrapeWebsiteTool,
     CSVSearchTool,
@@ -13,19 +12,16 @@ from crewai_tools import (
 )
 from crewai import Agent, Task
 from langchain.tools import Tool
-from langchain.utilities import SerpAPIWrapper
 import csv
 import io
 from unstructured.partition.html import partition_html
+from dotenv import load_dotenv
+from langchain_community.utilities import SerpAPIWrapper
+
+load_dotenv()
 
 class JobSearchTools:
-    search = SerpAPIWrapper()
-    
-    search_internet = Tool(
-        name="Search Internet",
-        func=search.run,
-        description="Useful for searching the internet for general job-related information."
-    )
+    search = SerpAPIWrapper()    
 
     website_search = WebsiteSearchTool()
     scrape_website = ScrapeWebsiteTool()
@@ -55,6 +51,30 @@ class JobSearchTools:
         Sentence Count: {sentence_count}
         Average Word Length: {avg_word_length:.2f}
         """
+
+
+    @staticmethod
+    def search_internet(query):
+        """Useful to search the internet about a given topic and return relevant results"""
+        top_result_to_return = 4
+        url = "https://google.serper.dev/search"
+        payload = json.dumps({"q": query})
+        headers = {
+            'X-API-KEY': os.environ['SERPAPI_API_KEY'],
+            'content-type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+        results = response.json()['organic']
+        string = []
+        for result in results[:top_result_to_return]:
+            try:
+                string.append('\n'.join([
+                    f"Title: {result['title']}", f"Link: {result['link']}",
+                    f"Snippet: {result['snippet']}", "\n-----------------"
+                ]))
+            except KeyError:
+                next
+        return '\n'.join(string)
 
     @staticmethod
     def ranking_algorithm(job_listings: str, candidate_profile: str):
@@ -147,28 +167,7 @@ class JobSearchTools:
         
         return json.dumps(job_listings)
 
-    @staticmethod
-    def search_internet(query):
-        """Useful to search the internet about a given topic and return relevant results"""
-        top_result_to_return = 4
-        url = "https://google.serper.dev/search"
-        payload = json.dumps({"q": query})
-        headers = {
-            'X-API-KEY': os.environ['SERPAPI_API_KEY'],
-            'content-type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data=payload)
-        results = response.json()['organic']
-        string = []
-        for result in results[:top_result_to_return]:
-            try:
-                string.append('\n'.join([
-                    f"Title: {result['title']}", f"Link: {result['link']}",
-                    f"Snippet: {result['snippet']}", "\n-----------------"
-                ]))
-            except KeyError:
-                next
-        return '\n'.join(string)
+
 
     @staticmethod
     def scrape_and_summarize_website(website):
