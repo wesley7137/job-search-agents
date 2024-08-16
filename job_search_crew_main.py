@@ -5,19 +5,23 @@ from job_search_tasks import JobSearchTasks
 from dotenv import load_dotenv
 import os
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
+from llm import llm_openai, llm_ollama, llm_anthropic
+
 load_dotenv()
+
 os.environ["BROWSERLESS_API_KEY"] = os.getenv("BROWSERLESS_API_KEY")
 os.environ["SERPAPI_API_KEY"] = os.getenv("SERPAPI_API_KEY")
-
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
 class JobSearchCrew:
-    def __init__(self, job_title, location, candidate_skills, candidate_experience, resume_file_path):
+    def __init__(self, job_title=None, location=None, candidate_skills=None, candidate_experience=None, resume_file_path=None):
         self.job_title = job_title
         self.location = location
         self.candidate_skills = candidate_skills
         self.candidate_experience = candidate_experience
         self.resume_file_path = resume_file_path
-
+        
     def run(self):
         agents = JobSearchAgents()
         tasks = JobSearchTasks()
@@ -27,13 +31,11 @@ class JobSearchCrew:
         data_extraction_specialist = agents.data_extraction_specialist()
         nlp_analyst = agents.nlp_analyst()
         ranking_specialist = agents.ranking_specialist()
-        resume_optimizer = agents.resume_optimizer()
 
-        scrape_task = tasks.scrape_job_listings(web_scraper, self.job_title, self.location)
-        extract_task = tasks.extract_and_structure_job_data(data_extraction_specialist)
-        analyze_task = tasks.analyze_job_descriptions(nlp_analyst, self.candidate_skills, self.candidate_experience)
-        rank_task = tasks.rank_opportunities(ranking_specialist)
-        optimize_task = tasks.optimize_resume(resume_optimizer, self.resume_file_path)
+        scrape_task = tasks.scrape_job_listings(web_scraper, self.job_title, self.location, self.candidate_skills)
+        extract_task = tasks.extract_and_structure_job_data(data_extraction_specialist, raw_data_path="raw_data.json", output_csv_path="structured_data.csv")
+        analyze_task = tasks.analyze_job_descriptions(nlp_analyst, self.candidate_skills, self.candidate_experience, structured_data_path="structured_data.csv")
+        rank_task = tasks.rank_opportunities(ranking_specialist, structured_data_path="structured_data.csv", ranking_criteria="skill match, experience level")
         final_report_task = tasks.compile_final_report(job_search_manager)
 
         crew = Crew(
@@ -42,21 +44,19 @@ class JobSearchCrew:
                 web_scraper,
                 data_extraction_specialist,
                 nlp_analyst,
-                ranking_specialist,
-                resume_optimizer
+                ranking_specialist
             ],
             tasks=[
                 scrape_task,
                 extract_task,
                 analyze_task,
                 rank_task,
-                optimize_task,
                 final_report_task
             ],
             verbose=True,
             process="hierarchical",
-            manager_llm=ChatOpenAI(model="gpt-4o-mini")
-            )
+            manager_llm=llm_ollama
+        )
 
         result = crew.kickoff()
         return result
