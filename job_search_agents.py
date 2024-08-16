@@ -3,6 +3,10 @@ from job_search_tools import JobSearchTools
 
 from job_search_tools import JobSearchTools
 
+
+
+
+
 class JobSearchAgents:
     def job_search_manager(self):
         return Agent(
@@ -15,7 +19,12 @@ class JobSearchAgents:
             allow_delegation=True,
             tools=[
                 JobSearchTools.file_writer,
-                JobSearchTools.file_reader
+                JobSearchTools.file_reader,
+                JobSearchTools.resume_analyzer_tool,
+                JobSearchTools.create_csv_tool,
+                JobSearchTools.read_csv_tool,
+                JobSearchTools.search_google_jobs_tool,
+                JobSearchTools.search_linkedin_jobs_tool,
             ]
         )
 
@@ -32,10 +41,10 @@ class JobSearchAgents:
                 JobSearchTools.search_internet_tool,
                 JobSearchTools.website_search,
                 JobSearchTools.scrape_website,
-                JobSearchTools.vision_tool,
                 JobSearchTools.search_google_jobs_tool,
-                JobSearchTools.search_linkedin_jobs_tool,
-                JobSearchTools.scrape_and_summarize_website_tool
+                JobSearchTools.scrape_and_summarize_website_tool,
+                JobSearchTools.create_csv_tool,
+                JobSearchTools.read_csv_tool,
             ]
         )
 
@@ -53,9 +62,10 @@ class JobSearchAgents:
                 JobSearchTools.file_writer,
                 JobSearchTools.nlp_analysis_tool,
                 JobSearchTools.create_csv_tool,
-                JobSearchTools.read_csv_tool
+                JobSearchTools.read_csv_tool,
             ]
         )
+
 
     def nlp_analyst(self):
         return Agent(
@@ -70,9 +80,12 @@ class JobSearchAgents:
                 JobSearchTools.csv_search,
                 JobSearchTools.json_search,
                 JobSearchTools.file_reader,
-                JobSearchTools.nlp_analysis_tool
+                JobSearchTools.nlp_analysis_tool,
+                JobSearchTools.create_csv_tool,
+                JobSearchTools.read_csv_tool,
             ]
         )
+
 
     def ranking_specialist(self):
         return Agent(
@@ -84,21 +97,9 @@ class JobSearchAgents:
             verbose=True,
             tools=[
                 JobSearchTools.calculate_tool,
-                JobSearchTools.ranking_algorithm_tool
+                JobSearchTools.ranking_algorithm_tool,
+                JobSearchTools.create_csv_tool,
+                JobSearchTools.read_csv_tool,
             ]
         )
 
-    def resume_optimizer(self):
-        return Agent(
-            role='AI-Powered Resume Optimizer',
-            goal="Tailor and optimize the candidate's resume for specific job opportunities using cutting-edge AI techniques",
-            backstory="""You are the leading expert in AI-driven resume optimization, with a background in both HR and machine 
-            learning. Your innovative approach to resume tailoring has helped countless job seekers stand out in competitive 
-            markets. You have an in-depth understanding of Applicant Tracking Systems (ATS) and modern recruitment processes.""",
-            verbose=True,
-            tools=[
-                JobSearchTools.file_writer,
-                JobSearchTools.file_reader,
-                JobSearchTools.resume_analyzer_tool
-            ]
-        )
