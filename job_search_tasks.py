@@ -1,12 +1,12 @@
 from textwrap import dedent
-import csv
+from crewai import Task
 
 class JobSearchTasks:
-    def scrape_job_listings(self, agent, job_title, location):
+    def scrape_job_listings(self, agent, job_title, location, candidate_skills):
         return Task(
             description=dedent(f"""
                 Conduct a comprehensive search and scraping operation to gather job listings for the position of {job_title} 
-                in {location}. Your task includes:
+                in {location} and {candidate_skills}. Your task includes:
                 1. Identifying and prioritizing the most relevant job boards, company websites, and professional networks.
                 2. Scraping job listings, ensuring to capture all relevant details including:
                    - Job Title
@@ -26,12 +26,14 @@ class JobSearchTasks:
                 - The number of job listings found
                 - A summary of the sources used
                 - Any challenges encountered during the scraping process
-                - An overview of the job market for {job_title} in {location}
+                - An overview of the job market for {job_title} or experience and skills for {candidate_skills} in {location}
                 - The raw scraped data in a format ready for further processing
 
                 {self.__tip_section()}
             """),
-            agent=agent
+            agent=agent,
+            expected_output="CSV formatted document with summarized job listings and data in the following format: Job Title, Company, Industry, Location, Salary, Job Description, Date Posted, Application Link",
+            data={"job_title": job_title, "location": location, "candidate_skills": candidate_skills}
         )
 
     def extract_and_structure_job_data(self, agent, raw_data_path, output_csv_path):
@@ -63,10 +65,14 @@ class JobSearchTasks:
                     - Any challenges encountered during the extraction process
                     - Statistics on data completeness (e.g., percentage of listings with salary information)
                     - Any interesting patterns or insights noticed during the extraction process
+                    
+                Use the write_file tool to save the document.
 
                 {self.__tip_section()}
             """),
-            agent=agent
+            agent=agent,
+            expected_output="Structured job data in CSV format",
+            data={"raw_data_path": raw_data_path, "output_csv_path": output_csv_path}
         )
 
     def analyze_job_descriptions(self, agent, candidate_skills, candidate_experience, structured_data_path):
@@ -74,38 +80,33 @@ class JobSearchTasks:
             description=dedent(f"""
                 Analyze the job descriptions obtained from the structured data at {structured_data_path} and match them against the candidate's 
                 profile. Your task includes:
-                1. Applying advanced NLP techniques to extract key requirements, responsibilities, and preferences from 
-                   each job description.
-                2. Creating a comprehensive skill matrix from the job descriptions.
                 3. Analyzing the candidate's skills ({', '.join(candidate_skills)}) and experience ({candidate_experience}) 
-                   against this matrix.
+                   against the job descriptions, requirements, etc..
                 4. Identifying the degree of match for each job listing.
                 5. Recognizing any skill gaps or areas where the candidate exceeds expectations.
-                6. Calculating a compatibility score for each job based on the candidate's profile and job requirements.
+                6. Giving a compatability score from 1-10 based on your findings.
 
                 Your final answer MUST be a detailed report including:
                 - An overview of the key skills and requirements in demand for this job category
-                - A match percentage and compatibility score for each job listing against the candidate's profile
+                - A match  compatibility score for each job listing against the candidate's profile
                 - Identified skill gaps and recommendations for skill development
                 - A list of job listings where the candidate is a strong match (>80% compatibility)
                 - Insights on industry trends based on the analyzed job descriptions
 
+                It should be in the following format: 
+                "Job Title: <job_title>", "Company: <company>", "Location: <location>", "Compatibility Score: <score>", "Matched Skills: <skills>", "Skill Gaps: <gaps>"
+                Use the write_file tool to save the document.
                 {self.__tip_section()}
             """),
-            agent=agent
+            agent=agent,
+            expected_output="Compatibility analysis report and skill gap identification in the format provided",
+            data={"candidate_skills": candidate_skills, "candidate_experience": candidate_experience, "structured_data_path": structured_data_path}
         )
 
     def rank_opportunities(self, agent, structured_data_path, ranking_criteria):
         return Task(
             description=dedent(f"""
-                Develop and apply a sophisticated ranking algorithm to prioritize job opportunities based on the candidate's 
-                profile and the analyzed job descriptions at {structured_data_path}. Your task includes:
-                1. Creating a multi-factor ranking algorithm considering elements such as skill match, experience level, 
-                   company reputation, growth potential, and any stated preferences.
-                2. Applying this algorithm to the list of job opportunities.
-                3. Considering both quantitative (e.g., compatibility score) and qualitative factors (e.g., company culture fit).
-                4. Accounting for the candidate's career goals and long-term growth potential.
-                5. Providing a confidence score for each ranking.
+                Take the structured job data from {structured_data_path} and rank the job opportunities based on relevanceto the candidate's profile.
 
                 Your final answer MUST be a comprehensive report including:
                 - A detailed explanation of your ranking methodology
@@ -113,34 +114,18 @@ class JobSearchTasks:
                 - An analysis of the top 5 opportunities, highlighting why they are particularly suitable
                 - Any potential red flags or areas of concern for the top-ranked opportunities
                 - Recommendations for how the candidate might improve their chances for the top-ranked positions
+                
+                It should be in the following format:
+                "Rank: <rank>", "Job Title: <job_title>", "Company: <company>", "Location: <location>", "Score: <score>", "Justification: <justification>"
 
                 {self.__tip_section()}
             """),
-            agent=agent
+            agent=agent,
+            expected_output="Ranked list of job opportunities with detailed analysis",
+            data={"structured_data_path": structured_data_path, "ranking_criteria": ranking_criteria}
         )
 
-    def optimize_resume(self, agent, resume_file_path, top_job_listings):
-        return Task(
-            description=dedent(f"""
-                Optimize and tailor the candidate's resume for the top-ranked job opportunities. Your task includes:
-                1. Analyzing the resume located at {resume_file_path}.
-                2. Identifying key strengths and unique selling points in the candidate's profile.
-                3. Tailoring the resume for each of the top 3 ranked job opportunities from {top_job_listings}.
-                4. Ensuring the resume is ATS-friendly while also appealing to human recruiters.
-                5. Incorporating relevant keywords and phrases from the job descriptions.
-                6. Quantifying achievements and impacts where possible.
 
-                Your final answer MUST include:
-                - An analysis of the original resume, highlighting strengths and areas for improvement
-                - Three versions of the optimized resume, each tailored for one of the top 3 opportunities
-                - A summary of the changes made for each version and the rationale behind them
-                - Recommendations for additional sections or information that could strengthen the resume
-                - Tips for the candidate on how to further customize the resume for future applications
-
-                {self.__tip_section()}
-            """),
-            agent=agent
-        )
 
     def compile_final_report(self, agent):
         return Task(
@@ -163,11 +148,15 @@ class JobSearchTasks:
                 - Long-term career development recommendations based on observed market trends and skill demands
                 - Any additional insights or recommendations that could give the candidate a competitive edge
 
-                Ensure the report is well-formatted, easy to read, and provides actionable insights for the job seeker.
+                It should be in the following format:
+                "Synthesized Output: <summary>", "Top Job Opportunities: <opportunities>", "Strategic Action Plan: <plan>", "SWOT Analysis: <analysis>", "Career Development Recommendations: <recommendations>"
+                Use the write_file tool to save the document.
 
                 {self.__tip_section()}
             """),
-            agent=agent
+            agent=agent,
+            expected_output="Comprehensive final job search report",
+            data={}
         )
 
     def __tip_section(self):
